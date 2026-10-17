@@ -1,0 +1,3 @@
+# Preserve the original byte-level SHA256 lock on frozen evaluation scenarios.
+# Windows Git clients must never convert this fixture to CRLF.
+data/evaluation/cp3_scenarios.json text eol=lf

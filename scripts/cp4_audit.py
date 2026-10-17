@@ -110,7 +110,20 @@ def git_tracked(root: Path) -> tuple[bool, list[str]]:
     proc=subprocess.run(["git", "ls-files", "-z"], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
     if proc.returncode: return True, ["Unable to inspect Git tracked paths"]
     tracked=[x.decode("utf-8", errors="replace") for x in proc.stdout.split(b"\0") if x]
-    return True, [name for name in tracked if name == ".env" or name.startswith((".venv/", "outputs/", "logs/")) or name.endswith((".pyc", ".sqlite", ".sqlite3"))]
+    # Empty placeholder files keep ignored directories visible in Git without
+    # publishing any generated output or log data. Do not exempt nonempty or
+    # symlinked placeholders, or any other file under these directories.
+    placeholders = {"logs/.gitkeep", "outputs/.gitkeep"}
+    unsafe = []
+    for name in tracked:
+        if name in placeholders:
+            p = root / name
+            if p.is_file() and not p.is_symlink() and p.stat().st_size == 0:
+                continue
+            unsafe.append(name)
+        elif name == ".env" or name.startswith((".venv/", "outputs/", "logs/")) or name.endswith((".pyc", ".sqlite", ".sqlite3")):
+            unsafe.append(name)
+    return True, unsafe
 
 
 def dependency_inventory() -> list[dict[str, str]]:
