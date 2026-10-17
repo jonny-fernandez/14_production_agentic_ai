@@ -1,0 +1,20 @@
+{
+  "fixture_version": "synthetic-v1",
+  "documents": [
+    {
+      "source_id": "SYNTH-DOC-001",
+      "title": "Fictional leave policy",
+      "text": "In the fictional sample organization, leave requests require manager approval before the requested start date. This is synthetic test data, not employment guidance."
+    },
+    {
+      "source_id": "SYNTH-DOC-002",
+      "title": "Fictional data access policy",
+      "text": "In this fictional test organization, analytics users can read approved reports but cannot modify production records. This is synthetic test data."
+    },
+    {
+      "source_id": "SYNTH-DOC-003",
+      "title": "Fictional reporting procedures",
+      "text": "Weekly fictional reporting summaries are reviewed on Fridays. All numbers in this example are synthetic."
+    }
+  ]
+}

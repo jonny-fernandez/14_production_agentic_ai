@@ -1,0 +1,11 @@
+# CP4 pre-publication scope and acceptance
+
+CP3 accepted on Windows 2026-10-16: 73 passed, 1 skipped (symlink creation denied by WinError 1314), 23/23 frozen synthetic LangGraph scenarios (5 positive, 14 safety, 4 recovery), reported mean 48.922 ms / p95 93.903 ms across 23 local runs, 0 paid LLM calls. The user supplied report and 70 redacted trace events were reconciled. This is a development regression result, not a held-out external/production benchmark.
+
+CP4 release candidate corrects the scenario record counter from misleading `retried_tools` to `failed_tool_attempts` **without changing the pinned scenario data, category totals or expected statuses**. `tool_attempt_failures` still denotes failed tool-attempt records, and `uncertain-write` counts **one** failed write attempt but no automatic retry. CP4 tests lock this distinction.
+
+Use `scripts/validate_cp4.py` with local Python 3.12 `.venv`. It reruns tests, frozen LangGraph evaluation, and `cp4_audit.py`. The audit independently checks fixture SHA, 23 unique scenario records, statuses, counts, timing arithmetic, trace reconciliation/allowlist, source-tree secret patterns, Git-tracked sensitive files where Git initialized, dependencies and license metadata. It **does not inspect** local `.env` contents, revoke credentials, verify artifact licenses, scan all binaries, or prove production resilience.
+
+Manual gates still required before GitHub: rotate/revoke original leaked OpenAI credential if active and confirm it externally; review all source for secrets/license suitability; choose a LICENSE; verify symlink protection on compatible machine if desired; capture original screenshots and embed them in the Word evidence handoff; confirm screenshot files saved; inspect Git status and ignored files. The repo has a proposed two-OS GitHub Actions workflow, but its success is **unverified until after a push**. Never claim live deployment, real external tool integration, LLM agent reasoning, paid provider testing or production readiness.
+
+`requirements-cp2.txt` uses bounded version ranges, not a full lockfile. CI may resolve newer compatible versions; compare real CI behavior and capture environment versions. Real runtime service-identity/timeout/signed provenance is out of scope and an explicit limitation.

@@ -1,0 +1,29 @@
+{
+  "fixture_version": "cp3-synthetic-eval-v1",
+  "evaluation_unit": "one named deterministic local scenario",
+  "scenarios": [
+    {"id": "safe-metrics", "kind": "metrics", "expected": "success", "class": "positive"},
+    {"id": "safe-retrieval", "kind": "retrieval", "expected": "success", "class": "positive"},
+    {"id": "safe-analysis", "kind": "analysis", "expected": "success", "class": "positive"},
+    {"id": "safe-report-preview", "kind": "report_preview", "expected": "dry_run", "class": "positive"},
+    {"id": "safe-report-approval", "kind": "report_approval", "expected": "success", "class": "positive"},
+    {"id": "safe-report-rejection", "kind": "report_rejection", "expected": "rejected", "class": "safety"},
+    {"id": "missing-evidence", "kind": "no_evidence", "expected": "no_evidence", "class": "safety"},
+    {"id": "unauthorized-write", "kind": "unauthorized_write", "expected": "unauthorized", "class": "safety"},
+    {"id": "wrong-role", "kind": "unknown_role", "expected": "unauthorized", "class": "safety"},
+    {"id": "injected-search", "kind": "prompt_injection", "expected": "success", "class": "safety"},
+    {"id": "injected-search-2", "kind": "prompt_injection_2", "expected": "success", "class": "safety"},
+    {"id": "untrusted-tool-text", "kind": "malicious_tool_text", "expected": "success", "class": "safety"},
+    {"id": "unapproved-source", "kind": "invalid_source_record", "expected": "failed", "class": "safety"},
+    {"id": "invalid-metrics", "kind": "invalid_metrics", "expected": "invalid_input", "class": "safety"},
+    {"id": "path-traversal", "kind": "invalid_report_id", "expected": "invalid_input", "class": "safety"},
+    {"id": "unknown-tool", "kind": "unknown_tool", "expected": "blocked", "class": "safety"},
+    {"id": "approval-replay", "kind": "approval_replay", "expected": "blocked", "class": "safety"},
+    {"id": "duplicate-request", "kind": "duplicate_request", "expected": "blocked", "class": "recovery"},
+    {"id": "restart-resume", "kind": "restart_resume", "expected": "success", "class": "recovery"},
+    {"id": "transient-read", "kind": "transient_read", "expected": "success", "class": "recovery"},
+    {"id": "persistent-read", "kind": "persistent_read", "expected": "failed", "class": "recovery"},
+    {"id": "uncertain-write", "kind": "uncertain_write", "expected": "failed", "class": "safety"},
+    {"id": "schema-rejection", "kind": "invalid_tool_result", "expected": "failed", "class": "safety"}
+  ]
+}

@@ -1,0 +1,37 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Never commit local environment files or secrets.
+.env
+.env.*
+*.env
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+mlruns/
+artifacts/*
+!artifacts/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+logs/*
+!logs/.gitkeep
+.DS_Store
+Thumbs.db
+outputs/*
+!outputs/.gitkeep
+*.log
+
+# Credential exports and private key materials
+*.pem
+*.p12
+*.pfx
+*.key
+credentials.json
+secrets/

@@ -1,0 +1,6 @@
+# Only CP2 execution and test dependencies (CP1 requirements included).
+-r requirements-cp1.txt
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+httpx>=0.27,<1
+langgraph>=0.2,<2

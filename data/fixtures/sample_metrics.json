@@ -1,0 +1,7 @@
+{
+  "fixture_version": "synthetic-v1",
+  "cases": [
+    {"case_id": "M-001", "values": [10, 20, 30], "expected_count": 3, "expected_mean": 20.0},
+    {"case_id": "M-002", "values": [5, 10, 15, 10], "expected_count": 4, "expected_mean": 10.0}
+  ]
+}
