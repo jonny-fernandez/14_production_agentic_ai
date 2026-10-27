@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 from agentic_ai.authorization import authorize
+from agentic_ai.decision_controls import validated_plan, ReadToolCircuit, PlanRejectedError
 from agentic_ai.telemetry import trace_id_for, redact_event, monotonic_ns
 from agentic_ai.contracts import (MetricsInput, MetricsOutput, RetrievalInput,
                                   RetrievalOutput, ReportInput, ReportOutput,
@@ -58,12 +59,14 @@ class WorkflowEngine:
 
     def __init__(self, root: Path, *, registry: ToolRegistry | None = None,
                  store: SQLiteStateStore | None = None, use_langgraph: bool = True,
-                 max_steps: int = 8, max_read_attempts: int = 2):
+                 max_steps: int = 8, max_read_attempts: int = 2,
+                 read_circuit: ReadToolCircuit | None = None):
         self.root = Path(root).resolve()
         self.registry = registry or make_cp2_registry(self.root)
         self.store = store or SQLiteStateStore(str(self.root / "outputs" / "cp2_state.sqlite3"))
         self.max_steps = max_steps
         self.max_read_attempts = max_read_attempts
+        self.read_circuit = read_circuit
         if not 1 <= max_steps <= 20 or not 1 <= max_read_attempts <= 3:
             raise ValueError("Invalid bounded execution budgets")
         self.graph = self._build_graph() if use_langgraph else None
@@ -100,17 +103,15 @@ class WorkflowEngine:
             self.store.save(state)
         return state
 
-    def start(self, request: WorkflowRequest | dict, *, role: str = "analyst") -> AgentState:
+    def start(self, request: WorkflowRequest | dict, *, role: str = "analyst",
+              proposed_plan: list[str] | None = None) -> AgentState:
         request = WorkflowRequest.model_validate(request)
-        plans = {
-            "metrics": ["calculate_metrics", "verify_evidence", "answer"],
-            "retrieval": ["retrieve_documents", "verify_evidence", "answer"],
-            "analysis": ["calculate_metrics", "retrieve_documents", "verify_evidence", "answer"],
-            "report": ["calculate_metrics", "retrieve_documents", "verify_evidence", "request_approval", "save_report", "answer"],
-        }
+        # Proposal is untrusted. Validate before a state row is created or any
+        # tool is invoked. Only the order of independent analysis reads may vary.
+        approved_plan = validated_plan(request.task_type, proposed_plan)
         state = AgentState(request_id=request.request_id, task_type=request.task_type,
                            role=role, request=request.model_dump(mode="json"),
-                           dry_run=request.dry_run, plan=plans[request.task_type],
+                           dry_run=request.dry_run, plan=approved_plan,
                            trace_id=trace_id_for(request.request_id))
         if len(state.plan) > self.max_steps:
             raise ValueError("Plan exceeds execution budget")
@@ -129,6 +130,8 @@ class WorkflowEngine:
         state = self.store.load(request_id)
         if state is None:
             raise KeyError("Unknown request ID")
+        if state.status in {"running", "awaiting_approval"}:
+            self._check_checkpoint_plan(state)
         if state.status == "awaiting_approval" and state.approval is None:
             return state
         if state.status in {"success", "failed", "rejected", "unauthorized", "no_evidence", "dry_run", "invalid"}:
@@ -142,6 +145,7 @@ class WorkflowEngine:
         state = self.store.load(request_id)
         if state is None:
             raise KeyError("Unknown request ID")
+        self._check_checkpoint_plan(state)
         if state.status != "awaiting_approval" or state.approval is not None:
             raise ApprovalError("No outstanding approval request")
         if not isinstance(approved, bool) or not isinstance(reviewer, str) or not (3 <= len(reviewer.strip()) <= 64):
@@ -153,6 +157,22 @@ class WorkflowEngine:
         state.status = "running"
         self.store.save(state)
         return self._drive(state)
+
+    def _check_checkpoint_plan(self, state: AgentState) -> None:
+        """Reject altered persisted plans before resuming or granting approval.
+
+        This is defense against accidental/invalid checkpoint modifications,
+        not cryptographic authentication of an attacker-writable SQLite store.
+        """
+        try:
+            expected = validated_plan(state.task_type, state.plan)
+        except PlanRejectedError:
+            raise ApprovalError("Persisted workflow plan violates trusted policy") from None
+        if expected != state.plan or not 0 <= state.step_index <= len(expected):
+            raise ApprovalError("Persisted workflow cursor violates trusted policy")
+        for tool in ("calculate_metrics", "retrieve_documents", "save_report"):
+            if tool in expected and (tool not in self.registry.names() or not authorize(state.role, tool)):
+                raise ApprovalError("Persisted tool authorization is invalid")
 
     @staticmethod
     def _verified(state: AgentState) -> bool:
@@ -277,13 +297,22 @@ class WorkflowEngine:
                 read_only = self.registry.is_read_only(step)
                 attempts = self.max_read_attempts if read_only else 1
                 for attempt in range(1, attempts + 1):
+                    if read_only and self.read_circuit is not None and not self.read_circuit.allows(step):
+                        state.tool_calls.append({"tool": step, "attempt": attempt, "status": "blocked"})
+                        state.status = "failed"
+                        state.error = "Read-only tool circuit is open"
+                        return
                     try:
                         result = self.registry.execute(step, args, role=state.role,
                                                        approval_granted=step == "save_report" and bool(state.approval and state.approval["approved"]))
                         state.tool_calls.append({"tool": step, "attempt": attempt, "status": "success"})
+                        if read_only and self.read_circuit is not None:
+                            self.read_circuit.success(step)
                         break
                     except ToolExecutionError:
                         state.tool_calls.append({"tool": step, "attempt": attempt, "status": "failed"})
+                        if read_only and self.read_circuit is not None:
+                            self.read_circuit.failure(step)
                         if attempt == attempts:
                             raise
             except UnauthorizedToolError:

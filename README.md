@@ -1,6 +1,6 @@
 # Project 14 — Production Agentic AI & Tool-Orchestration Platform
 
-[![Local validation](https://img.shields.io/badge/local%20Windows-78%20passed%20%7C%201%20skipped-informational)](#verified-results) [![Evaluation](https://img.shields.io/badge/frozen%20synthetic%20evaluation-23%2F23-informational)](#verified-results) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Local validation](https://img.shields.io/badge/local%20Windows-162%20passed%20%7C%200%20skipped-informational)](#verified-results) [![Evaluation](https://img.shields.io/badge/frozen%20synthetic%20evaluation-23%2F23-informational)](#verified-results) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Scope:** A reproducible, **local and deterministic** LangGraph orchestration / safety demonstration for synthetic business-style analytics. The title expresses the engineering direction—not a claim of live production deployment, general LLM autonomy, or enterprise security certification.
 >
@@ -155,3 +155,17 @@ A companion 9-page Word evidence handoff was prepared **outside the Git reposito
 ## License and publication
 
 MIT License — see [LICENSE](LICENSE). Dependency metadata was inventoried during CP4, but full third-party provenance and redistribution review is not established by automated tests. This project is an educational portfolio demonstration, not a security-certified production service.
+
+
+<!-- PROJECT14_CP4_UPGRADE_BEGIN -->
+## October 2026 checkpoint upgrades — locally verified
+
+The existing Project 14 synthetic LangGraph demo has two opt-in additions: CP2 decision-control / read-only failure-circuit safeguards, and CP3 read-only checkpoint inspection with adversarial tests. The original deterministic workflow remains the default.
+
+- **Windows Administrator local suite:** **162 passed, 0 failed, 0 skipped**, confirmed in two CP3 runs.
+- **Frozen development evaluation:** **23/23** (5 positive, 14 safety, 4 recovery) with compiled LangGraph.
+- **Adversarial checkpoint probes:** **6/6**. No paid LLM calls or live external integrations.
+- **Local audit:** passed with manual review remaining. Hosted GitHub Actions results must be checked after publication; platform-specific symlink privileges may change skip counts.
+
+See [CP4 release scope](docs/CP4_UPGRADE_RELEASE_2026.md), [CP2 decision controls](docs/CP2_UPGRADE_DECISION_RELIABILITY.md), and [CP3 checkpoint auditor](docs/CP3_UPGRADE_CHECKPOINT_AUDIT.md). The six new `screenshots/09_upgrade_*`–`14_upgrade_*` files are **rendered evidence summaries**, not actual terminal captures. Retain existing 01–08 captures separately. This is a local synthetic safety and reliability demonstration, not a production deployment.
+<!-- PROJECT14_CP4_UPGRADE_END -->
